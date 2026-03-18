@@ -385,20 +385,6 @@
         }
         .btn-clear:hover { border-color: var(--red); color: var(--red); }
 
-        .btn-avan {
-            background: transparent;
-            border: 1px solid var(--accent);
-            color: var(--accent);
-            border-radius: 4px;
-            font-family: var(--ff);
-            font-size: 9px; font-weight: 700;
-            letter-spacing: 1.5px; text-transform: uppercase;
-            padding: 6px 12px; cursor: pointer;
-            transition: background .15s, color .15s;
-            flex-shrink: 0;
-        }
-        .btn-avan:hover { background: var(--accent); color: #060e0b; }
-
         body.has-bundle { padding-bottom: 68px; }
         #results { display: none; }
 
@@ -515,24 +501,7 @@
         </div>
         <div class="bdiv"></div>
         <div id="bundle-chips" class="bundle-chips"></div>
-        <button class="btn-avan ms-auto" onclick="copyAvanScript()" id="btn-avan-script" title="Скопировать скрипт для авто-выбора на avan.market">⚡ Select on Avan</button>
-        <button class="btn-clear" onclick="clearBundle()">Clear</button>
-    </div>
-</div>
-
-<!-- Avan Script Modal -->
-<div id="avan-modal" style="display:none; position:fixed; inset:0; z-index:2000; background:rgba(6,8,13,.85); backdrop-filter:blur(6px); align-items:center; justify-content:center;">
-    <div style="background:var(--panel); border:1px solid var(--border-hi); border-top:2px solid var(--accent); border-radius:8px; padding:28px 32px; max-width:520px; width:90%; position:relative;">
-        <div style="font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:16px;">Auto-Select on Avan</div>
-        <ol style="font-size:13px; color:var(--text-muted); line-height:1.9; margin-bottom:20px; padding-left:20px;">
-            <li>Открой <strong style="color:var(--text)">avan.market</strong> в браузере</li>
-            <li>Нажми <strong style="color:var(--text)">F12</strong> → вкладка <strong style="color:var(--text)">Console</strong></li>
-            <li>Вставь скрипт (<strong style="color:var(--accent)">Ctrl+V</strong>) и нажми <strong style="color:var(--text)">Enter</strong></li>
-        </ol>
-        <div style="display:flex; gap:10px;">
-            <button onclick="doCopyScript()" id="copy-btn" style="flex:1; background:var(--accent); color:#060e0b; border:none; border-radius:4px; font-family:var(--ff); font-size:12px; font-weight:800; letter-spacing:2px; text-transform:uppercase; padding:11px 0; cursor:pointer;">Copy Script</button>
-            <button onclick="document.getElementById('avan-modal').style.display='none'" style="background:transparent; border:1px solid var(--border); color:var(--text-muted); border-radius:4px; font-family:var(--ff); font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; padding:11px 20px; cursor:pointer;">Close</button>
-        </div>
+        <button class="btn-clear ms-auto" onclick="clearBundle()">Clear</button>
     </div>
 </div>
 
@@ -780,45 +749,6 @@ function clearBundle() {
     Object.keys(bundle).forEach(k => delete bundle[k]);
     document.querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
     updateBundle();
-}
-
-// ── AVAN AUTO-SELECT ──
-function copyAvanScript() {
-    document.getElementById('avan-modal').style.display = 'flex';
-}
-
-function doCopyScript() {
-    const items = Object.values(bundle);
-    // build list: {name, count} — normalized same way as backend
-    const targets = items.map(e => ({
-        name: e.name.replace(/\s+/g,' ').trim().toLowerCase(),
-        count: e.count
-    }));
-
-    const script = `(function(){
-  const targets = ${JSON.stringify(targets)};
-  const needed = {};
-  targets.forEach(t => { needed[t.name] = t.count; });
-  let selected = 0, skipped = 0;
-  const cards = document.querySelectorAll('[class*="ItemCard_ItemCard_container"]');
-  cards.forEach(card => {
-    const nameEl = card.querySelector('[class*="Typography_secondary-white"]');
-    if (!nameEl) return;
-    const name = nameEl.textContent.trim().replace(/\\s+/g,' ').toLowerCase();
-    if (needed[name] && needed[name] > 0) {
-      const btn = card.querySelector('[class*="ItemCard_addToTrade"]');
-      if (btn) { btn.click(); needed[name]--; selected++; }
-    }
-  });
-  const left = Object.values(needed).filter(v => v > 0).length;
-  alert('✅ Выбрано: ' + selected + ' карточек' + (left ? '\\n⚠️ Не найдено в текущем виде: ' + left + ' вещей (прокрути страницу и запусти снова)' : ''));
-})();`;
-
-    navigator.clipboard.writeText(script).then(() => {
-        const btn = document.getElementById('copy-btn');
-        btn.textContent = 'Copied!';
-        setTimeout(() => { btn.textContent = 'Copy Script'; }, 2000);
-    });
 }
 
 function updateBundle() {
