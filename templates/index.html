@@ -1,84 +1,443 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Avan Skin Analyzer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        body { background: #0d1117; color: #e6edf3; }
-        .card-panel { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; }
-        textarea {
-            background: #0d1117 !important; color: #e6edf3 !important;
-            border-color: #30363d !important; font-family: monospace; font-size: 12px;
-            resize: vertical;
+        :root {
+            --bg:           #06080d;
+            --surface:      #0c1018;
+            --panel:        #111820;
+            --panel-2:      #141e28;
+            --border:       #1a2535;
+            --border-hi:    #243550;
+            --accent:       #00c8a0;
+            --accent-dim:   rgba(0,200,160,.12);
+            --accent-glow:  rgba(0,200,160,.28);
+            --blue:         #3d9bff;
+            --blue-dim:     rgba(61,155,255,.13);
+            --green:        #00e676;
+            --green-dim:    rgba(0,230,118,.12);
+            --yellow:       #ffcc02;
+            --yellow-dim:   rgba(255,204,2,.1);
+            --orange:       #ff8c42;
+            --red:          #ff3d57;
+            --red-dim:      rgba(255,61,87,.12);
+            --text:         #d4e8f5;
+            --text-muted:   #4a6a8a;
+            --text-dim:     #2a4060;
+            --ff:           'Oxanium', sans-serif;
+            --fm:           'JetBrains Mono', monospace;
         }
-        textarea:focus { border-color: #58a6ff !important; box-shadow: 0 0 0 2px rgba(88,166,255,0.15) !important; }
-        .form-control { background: #0d1117; color: #e6edf3; border-color: #30363d; }
-        .form-control:focus { background: #0d1117; color: #e6edf3; border-color: #58a6ff; box-shadow: 0 0 0 2px rgba(88,166,255,0.15); }
-        .nav-tabs { border-color: #30363d; }
-        .nav-tabs .nav-link { color: #8b949e; border-color: transparent; }
-        .nav-tabs .nav-link:hover { color: #e6edf3; border-color: transparent; }
-        .nav-tabs .nav-link.active { background: #161b22; border-color: #30363d #30363d #161b22; color: #58a6ff; }
-        .table { color: #e6edf3; }
-        .table thead th { background: #21262d; color: #8b949e; border-color: #30363d; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
-        .table td, .table th { border-color: #21262d; font-size: 13px; vertical-align: middle; }
-        .table tbody tr:hover td { background: #1c2128; }
-        .total-row td { background: #1c2d3a !important; font-weight: 600; border-top: 2px solid #58a6ff !important; color: #e6edf3; }
-        .ratio-badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
-        .r-excellent { background: #1a4731; color: #3fb950; }
-        .r-good     { background: #1c3a2e; color: #56d364; }
-        .r-ok       { background: #2d2a1e; color: #d29922; }
-        .r-warn     { background: #2d2210; color: #e3b341; }
-        .r-poor     { background: #2d1e1e; color: #f85149; }
-        .stat-card { background: #21262d; border-radius: 8px; padding: 14px 18px; height: 100%; }
-        .stat-value { font-size: 22px; font-weight: 700; line-height: 1.2; }
-        .stat-label { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
-        #results { display: none; }
-        .tab-content { background: #161b22; border: 1px solid #30363d; border-top: none; border-radius: 0 0 10px 10px; }
-        .empty-state { padding: 40px; text-align: center; color: #8b949e; }
-        #bundle-bar { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #161b22; border-top: 1px solid #30363d; padding: 12px 24px; z-index: 1000; }
-        .bundle-item { display: inline-flex; align-items: center; gap: 6px; background: #21262d; border-radius: 6px; padding: 3px 8px; margin: 2px; font-size: 12px; }
-        .bundle-item .remove { cursor: pointer; color: #8b949e; font-size: 14px; line-height: 1; }
-        .bundle-item .remove:hover { color: #f85149; }
-        tr.selected td { background: #1c2d3a !important; }
-        body.has-bundle { padding-bottom: 80px; }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--ff);
+            font-size: 16px;
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse 60% 40% at 15% 0%, rgba(0,200,160,.05) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 40% at 85% 100%, rgba(61,155,255,.04) 0%, transparent 70%);
+        }
+
+        /* ── HEADER ── */
+        .app-header {
+            padding: 18px 0 14px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo { display: flex; flex-direction: column; gap: 2px; }
+        .logo-name {
+            font-size: 18px; font-weight: 800;
+            letter-spacing: 3px; text-transform: uppercase;
+            color: var(--accent);
+            text-shadow: 0 0 24px var(--accent-glow);
+        }
+        .logo-sub {
+            font-size: 9px; font-weight: 500;
+            letter-spacing: 3px; text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .hdr-badge {
+            font-size: 9px; font-weight: 600;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--text-muted);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            padding: 4px 10px;
+        }
+
+        /* ── PANEL ── */
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+        .panel-accent { border-top: 2px solid var(--accent); }
+
+        /* ── LABELS ── */
+        .field-label {
+            display: block;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 2.5px; text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        /* ── INPUTS ── */
+        textarea, input.form-control {
+            background: var(--surface) !important;
+            color: var(--text) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 4px !important;
+            font-family: var(--fm) !important;
+            font-size: 13px !important;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        textarea { resize: vertical; }
+        textarea:focus, input.form-control:focus {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 2px var(--accent-dim) !important;
+            outline: none !important;
+        }
+
+        /* ── ANALYZE BUTTON ── */
+        .btn-analyze {
+            background: var(--accent);
+            color: #060e0b;
+            border: none;
+            border-radius: 4px;
+            font-family: var(--ff);
+            font-size: 12px; font-weight: 800;
+            letter-spacing: 2.5px; text-transform: uppercase;
+            padding: 12px 0;
+            width: 100%;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: box-shadow .2s, opacity .2s;
+        }
+        .btn-analyze::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: rgba(255,255,255,.08);
+            opacity: 0;
+            transition: opacity .2s;
+        }
+        .btn-analyze:hover { box-shadow: 0 0 22px var(--accent-glow); }
+        .btn-analyze:hover::after { opacity: 1; }
+        .btn-analyze:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
+        .btn-analyze:disabled::after { opacity: 0; }
+
+        /* ── STAT GRID ── */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 14px 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+        }
+        .stat-card.s-white::before { background: #4a6a8a; }
+        .stat-card.s-green::before { background: var(--green); }
+        .stat-card.s-blue::before  { background: var(--blue); }
+        .stat-card.s-yellow::before{ background: var(--yellow); }
+        .stat-card.s-gray::before  { background: var(--text-dim); }
+
+        .stat-value {
+            font-size: 26px; font-weight: 800;
+            font-family: var(--fm);
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+        }
+        .stat-card.s-white .stat-value  { color: var(--text); }
+        .stat-card.s-green .stat-value  { color: var(--green); }
+        .stat-card.s-blue  .stat-value  { color: var(--blue); }
+        .stat-card.s-yellow.stat-value  { color: var(--yellow); }
+        .stat-card.s-yellow .stat-value { color: var(--yellow); }
+        .stat-card.s-gray  .stat-value  { color: var(--text-muted); }
+
+        .stat-label {
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+        .stat-sub {
+            font-size: 10px;
+            color: var(--text-dim);
+            font-family: var(--fm);
+            margin-top: 2px;
+        }
+
+        /* ── TABS ── */
+        .tabs-nav {
+            display: flex; gap: 2px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            padding: 4px;
+        }
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            color: var(--text-muted);
+            font-family: var(--ff);
+            font-size: 12px; font-weight: 700;
+            letter-spacing: 1px; text-transform: uppercase;
+            padding: 7px 6px;
+            cursor: pointer;
+            transition: all .15s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            white-space: nowrap;
+        }
+        .tab-btn:hover { color: var(--text); background: var(--panel-2); }
+        .tab-btn.active {
+            background: var(--panel);
+            border-color: var(--border-hi);
+            color: var(--accent);
+        }
+        .tab-count {
+            font-size: 10px; font-weight: 700;
+            font-family: var(--fm);
+            padding: 1px 5px;
+            border-radius: 3px;
+            min-width: 20px; text-align: center;
+        }
+        .ct-blue   { background: var(--blue-dim);  color: var(--blue); }
+        .ct-green  { background: var(--green-dim); color: var(--green); }
+        .ct-red    { background: var(--red-dim);   color: var(--red); }
+
+        .tab-body {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+        }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        /* ── SEARCH ── */
+        .search-bar {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .search-input {
+            background: var(--surface) !important;
+            color: var(--text) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 4px !important;
+            font-family: var(--fm) !important;
+            font-size: 13px !important;
+            padding: 6px 10px !important;
+            width: 100%;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .search-input:focus {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 2px var(--accent-dim) !important;
+            outline: none !important;
+        }
+
+        /* ── TABLE ── */
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table thead tr { border-bottom: 1px solid var(--border-hi); }
+        .data-table thead th {
+            font-size: 11px; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 8px 12px;
+            background: var(--surface);
+            white-space: nowrap;
+        }
+        .data-table thead th:first-child { padding-left: 16px; }
+        .data-table thead th:last-child  { padding-right: 16px; }
+
+        .data-table tbody tr {
+            border-bottom: 1px solid rgba(26,37,53,.7);
+            cursor: pointer;
+            transition: background .1s;
+        }
+        .data-table tbody tr:hover td   { background: var(--panel-2); }
+        .data-table tbody tr.selected td{ background: rgba(0,200,160,.06) !important; }
+
+        .data-table tbody td {
+            padding: 9px 12px;
+            font-size: 15px;
+            vertical-align: middle;
+        }
+        .data-table tbody td:first-child { padding-left: 16px; color: var(--text-dim); font-family: var(--fm); font-size: 11px; }
+        .data-table tbody td:last-child  { padding-right: 16px; }
+
+        .item-cell { display: flex; align-items: center; gap: 9px; }
+        .item-icon {
+            width: 32px; height: 32px;
+            border-radius: 4px;
+            object-fit: contain;
+            background: var(--surface);
+            flex-shrink: 0;
+        }
+        .icon-ph { width: 32px; height: 32px; background: var(--surface); border-radius: 4px; flex-shrink: 0; }
+        .item-qty { font-size: 11px; color: var(--text-muted); font-family: var(--fm); margin-right: 1px; }
+
+        .price-a { font-family: var(--fm); font-size: 14px; font-weight: 600; color: var(--green); }
+        .price-s { font-family: var(--fm); font-size: 14px; color: var(--text-muted); }
+
+        .total-row td {
+            background: rgba(0,200,160,.04) !important;
+            border-top: 1px solid var(--accent) !important;
+            font-weight: 600; font-size: 12px;
+            cursor: default;
+        }
+        .total-row:hover td { background: rgba(0,200,160,.04) !important; }
+
+        /* ── RATIO BADGES ── */
+        .ratio-badge {
+            display: inline-block;
+            font-size: 13px; font-weight: 700;
+            font-family: var(--fm);
+            padding: 2px 7px;
+            border-radius: 3px;
+        }
+        .r-excellent { background: rgba(0,230,118,.12);  color: #00e676; border: 1px solid rgba(0,230,118,.25); }
+        .r-good      { background: rgba(0,200,160,.12);  color: #00c8a0; border: 1px solid rgba(0,200,160,.25); }
+        .r-ok        { background: rgba(255,204,2,.1);   color: #ffcc02; border: 1px solid rgba(255,204,2,.2); }
+        .r-warn      { background: rgba(255,140,66,.1);  color: #ff8c42; border: 1px solid rgba(255,140,66,.2); }
+        .r-poor      { background: rgba(255,61,87,.1);   color: #ff3d57; border: 1px solid rgba(255,61,87,.2); }
+
+        /* ── SORT ── */
         th.sortable { cursor: pointer; user-select: none; }
-        th.sortable:hover { color: #e6edf3 !important; }
-        .sort-icon { font-size: 10px; margin-left: 4px; opacity: 0.4; }
-        th.sort-asc .sort-icon, th.sort-desc .sort-icon { opacity: 1; color: #58a6ff; }
+        th.sortable:hover { color: var(--text) !important; }
+        .sort-icon { font-size: 9px; margin-left: 3px; opacity: .3; }
+        th.sort-asc .sort-icon, th.sort-desc .sort-icon { opacity: 1; color: var(--accent); }
+
+        /* ── EMPTY ── */
+        .empty-state { padding: 48px; text-align: center; color: var(--text-muted); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+
+        /* ── BUNDLE BAR ── */
+        #bundle-bar {
+            display: none;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(10,14,22,.94);
+            backdrop-filter: blur(14px);
+            border-top: 1px solid var(--border-hi);
+            padding: 8px 24px;
+            z-index: 1000;
+        }
+        .bundle-inner { display: flex; align-items: center; gap: 16px; min-height: 46px; }
+        .bundle-label {
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 3px; text-transform: uppercase;
+            color: var(--text-dim);
+            flex-shrink: 0;
+        }
+        .bdiv { width: 1px; height: 30px; background: var(--border); flex-shrink: 0; }
+        .bstat { flex-shrink: 0; }
+        .bstat-lbl { font-size: 8px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); }
+        .bstat-val { font-family: var(--fm); font-weight: 700; font-size: 13px; }
+
+        .bundle-chips { flex: 1; display: flex; flex-wrap: wrap; overflow: hidden; max-height: 52px; }
+        .bchip {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: var(--panel); border: 1px solid var(--border);
+            border-radius: 3px; padding: 3px 8px; margin: 2px;
+            font-size: 11px; font-family: var(--fm);
+        }
+        .bchip-x { cursor: pointer; color: var(--text-muted); font-size: 14px; line-height: 1; transition: color .15s; }
+        .bchip-x:hover { color: var(--red); }
+
+        .btn-clear {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 4px;
+            font-family: var(--ff);
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            padding: 6px 12px; cursor: pointer;
+            transition: border-color .15s, color .15s;
+            flex-shrink: 0;
+        }
+        .btn-clear:hover { border-color: var(--red); color: var(--red); }
+
+        body.has-bundle { padding-bottom: 68px; }
+        #results { display: none; }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up { animation: fadeUp .3s ease both; }
+        .stat-card { animation: fadeUp .35s ease both; }
+        .stat-card:nth-child(2) { animation-delay: .05s; }
+        .stat-card:nth-child(3) { animation-delay: .1s; }
+        .stat-card:nth-child(4) { animation-delay: .15s; }
+        .stat-card:nth-child(5) { animation-delay: .2s; }
+
+        @media (max-width: 960px) {
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body>
-<div class="container-fluid p-4" style="max-width: 1400px;">
+<div class="container-fluid px-4" style="max-width:1440px; margin:0 auto;">
 
-    <div class="d-flex align-items-center mb-4">
-        <h4 class="mb-0" style="color: #58a6ff;">Avan Skin Analyzer</h4>
+    <!-- Header -->
+    <div class="app-header">
+        <div class="logo">
+            <div class="logo-name">Avan Analyzer</div>
+            <div class="logo-sub">Rust · Skin · Intelligence</div>
+        </div>
+        <div class="hdr-badge">Rust 252490</div>
     </div>
 
     <!-- Input -->
-    <div class="card-panel mb-4">
+    <div class="panel panel-accent p-3 mb-4">
         <div class="row g-3">
             <div class="col-md-5">
-                <label class="form-label text-secondary small fw-semibold">INVENTORY HTML</label>
-                <textarea id="invHtml" class="form-control" rows="9"></textarea>
+                <label class="field-label">Inventory HTML</label>
+                <textarea id="invHtml" class="form-control" rows="9" placeholder="Paste page HTML with SIH price badges…"></textarea>
             </div>
             <div class="col-md-5">
-                <label class="form-label text-secondary small fw-semibold">AVAN ITEMS</label>
-                <textarea id="avanText" class="form-control" rows="9"></textarea>
+                <label class="field-label">Avan Items</label>
+                <textarea id="avanText" class="form-control" rows="9" placeholder="Paste item list from avan.market…"></textarea>
             </div>
             <div class="col-md-2 d-flex flex-column gap-3">
                 <div>
-                    <label class="form-label text-secondary small fw-semibold">STEAM ID</label>
+                    <label class="field-label">Steam ID</label>
                     <input type="text" id="steamId" class="form-control" value="76561199482415281">
                 </div>
                 <div>
-                    <label class="form-label text-secondary small fw-semibold">MIN. RATE (%)</label>
+                    <label class="field-label">Min. Rate (%)</label>
                     <input type="number" id="minPercent" class="form-control" value="65" min="0" max="100">
                 </div>
-                <button class="btn btn-primary mt-auto w-100" onclick="analyze()" id="analyzeBtn" style="height: 44px;">
-                    Analyze
-                </button>
+                <button class="btn-analyze mt-auto" id="analyzeBtn" onclick="analyze()">Analyze</button>
             </div>
         </div>
     </div>
@@ -87,364 +446,336 @@
     <div id="results">
 
         <!-- Stats -->
-        <div class="row g-3 mb-4" id="statsRow"></div>
+        <div class="stat-grid" id="statsRow"></div>
 
-        <!-- Tabs -->
-        <ul class="nav nav-tabs" id="resultTabs">
-            <li class="nav-item">
-                <a class="nav-link active" data-bs-toggle="tab" href="#tab-can-sell">
-                    Can Sell <span class="badge bg-primary ms-1" id="badge-can-sell"></span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#tab-filtered" id="tab-filtered-label">
-                    Above Threshold <span class="badge bg-success ms-1" id="badge-filtered"></span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#tab-cant-sell">
-                    Can't Sell <span class="badge bg-danger ms-1" id="badge-cant-sell"></span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#tab-best">20 Best <span class="badge bg-success ms-1" id="badge-best"></span></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#tab-worst">20 Worst <span class="badge bg-danger ms-1" id="badge-worst"></span></a>
-            </li>
-        </ul>
+        <!-- Tabs Nav -->
+        <div class="tabs-nav">
+            <button class="tab-btn active" onclick="switchTab('can-sell',this)">
+                Can Sell <span class="tab-count ct-blue" id="badge-can-sell">0</span>
+            </button>
+            <button class="tab-btn" id="tab-filtered-btn" onclick="switchTab('filtered',this)">
+                Above Threshold <span class="tab-count ct-green" id="badge-filtered">0</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('cant-sell',this)">
+                Can't Sell <span class="tab-count ct-red" id="badge-cant-sell">0</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('best',this)">
+                20 Best <span class="tab-count ct-green" id="badge-best">0</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('worst',this)">
+                20 Worst <span class="tab-count ct-red" id="badge-worst">0</span>
+            </button>
+        </div>
 
-        <div class="tab-content">
-            <div class="tab-pane fade show active p-1" id="tab-can-sell"></div>
-            <div class="tab-pane fade p-1" id="tab-filtered"></div>
-            <div class="tab-pane fade p-1" id="tab-cant-sell"></div>
-            <div class="tab-pane fade p-1" id="tab-best"></div>
-            <div class="tab-pane fade p-1" id="tab-worst"></div>
+        <div class="tab-body">
+            <div class="tab-pane active" id="tab-can-sell"></div>
+            <div class="tab-pane"        id="tab-filtered"></div>
+            <div class="tab-pane"        id="tab-cant-sell"></div>
+            <div class="tab-pane"        id="tab-best"></div>
+            <div class="tab-pane"        id="tab-worst"></div>
         </div>
 
     </div>
 </div>
 
-<!-- Bundle Calculator Bar -->
+<!-- Bundle Bar -->
 <div id="bundle-bar">
-    <div class="d-flex align-items-center gap-3 flex-wrap">
-        <div class="d-flex align-items-center gap-3 me-2">
-            <span class="text-secondary small fw-semibold">BUNDLE</span>
-            <span style="color:#3fb950; font-weight:700; font-size:16px">Avan: $<span id="bundle-avan">0.00</span></span>
-            <span class="text-secondary" style="font-size:14px">Steam: $<span id="bundle-steam">0.00</span></span>
-            <span style="color:#d29922; font-weight:600; font-size:14px">Rate: <span id="bundle-rate">0.00</span>%</span>
-            <span class="text-secondary small"><span id="bundle-count">0</span> items</span>
+    <div class="bundle-inner">
+        <span class="bundle-label">Bundle</span>
+        <div class="bdiv"></div>
+        <div class="bstat">
+            <div class="bstat-lbl">Avan</div>
+            <div class="bstat-val" style="color:var(--green)">$<span id="bundle-avan">0.00</span></div>
         </div>
-        <div id="bundle-items" class="flex-grow-1 d-flex flex-wrap"></div>
-        <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="clearBundle()">Clear</button>
+        <div class="bstat">
+            <div class="bstat-lbl">Steam</div>
+            <div class="bstat-val" style="color:var(--text-muted)">$<span id="bundle-steam">0.00</span></div>
+        </div>
+        <div class="bstat">
+            <div class="bstat-lbl">Rate</div>
+            <div class="bstat-val" style="color:var(--yellow)"><span id="bundle-rate">0.00</span>%</div>
+        </div>
+        <div class="bstat">
+            <div class="bstat-lbl">Items</div>
+            <div class="bstat-val" style="color:var(--text-muted); font-size:12px"><span id="bundle-count">0</span></div>
+        </div>
+        <div class="bdiv"></div>
+        <div id="bundle-chips" class="bundle-chips"></div>
+        <button class="btn-clear ms-auto" onclick="clearBundle()">Clear</button>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-function ratioBadge(ratio) {
-    let cls;
-    if (ratio >= 70)      cls = 'r-excellent';
-    else if (ratio >= 65) cls = 'r-good';
-    else if (ratio >= 60) cls = 'r-ok';
-    else if (ratio >= 50) cls = 'r-warn';
-    else                  cls = 'r-poor';
-    return `<span class="ratio-badge ${cls}">${ratio.toFixed(2)}%</span>`;
-}
-
-const tableItems = {};
-const tableTotals = {};
-const sortState = {};
-
 const STEAM_CDN = 'https://community.cloudflare.steamstatic.com/economy/image/';
+const tableItems = {}, tableTotals = {}, sortState = {};
 
-function itemIcon(icon) {
-    if (!icon) return '<div style="width:32px;height:32px;background:#21262d;border-radius:4px"></div>';
-    return `<img src="${STEAM_CDN}${icon}/32fx32f" width="32" height="32" style="border-radius:4px;object-fit:contain;background:#21262d" loading="lazy">`;
+// ── TABS ──
+function switchTab(id, btn) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+    clearBundle();
 }
 
-function renderSellRows(items) {
-    return items.map((item, i) => {
-        const prefix = item.count > 1 ? `<span class="text-secondary">${item.count}x </span>` : '';
-        const data = encodeURIComponent(JSON.stringify(item));
-        return `<tr class="bundle-row" data-item="${data}" style="cursor:pointer">
-            <td class="text-secondary ps-3">${i + 1}</td>
-            <td><div class="d-flex align-items-center gap-2">${itemIcon(item.icon)}<span>${prefix}${item.name}</span></div></td>
-            <td class="text-center">${item.count}</td>
-            <td class="text-end" style="color:#3fb950">$${item.avan_unit.toFixed(2)}</td>
-            <td class="text-end text-secondary">$${item.steam_unit.toFixed(2)}</td>
-            <td class="text-end pe-3">${ratioBadge(item.ratio)}</td>
+// ── HELPERS ──
+function ratioBadge(r) {
+    const cls = r >= 70 ? 'r-excellent' : r >= 65 ? 'r-good' : r >= 60 ? 'r-ok' : r >= 50 ? 'r-warn' : 'r-poor';
+    return `<span class="ratio-badge ${cls}">${r.toFixed(2)}%</span>`;
+}
+
+function icon(ico) {
+    if (!ico) return '<div class="icon-ph"></div>';
+    return `<img src="${STEAM_CDN}${ico}/32fx32f" class="item-icon" width="32" height="32" loading="lazy">`;
+}
+
+// ── ROWS ──
+function sellRows(items) {
+    return items.map((it, i) => {
+        const d = encodeURIComponent(JSON.stringify(it));
+        return `<tr class="bundle-row" data-item="${d}">
+            <td>${i+1}</td>
+            <td><div class="item-cell">${icon(it.icon)}<span>${it.count>1?`<span class="item-qty">${it.count}×</span>`:''}${it.name}</span></div></td>
+            <td class="text-center" style="font-family:var(--fm);font-size:12px">${it.count}</td>
+            <td class="text-end"><span class="price-a">$${it.avan_unit.toFixed(2)}</span></td>
+            <td class="text-end"><span class="price-s">$${it.steam_unit.toFixed(2)}</span></td>
+            <td class="text-end">${ratioBadge(it.ratio)}</td>
         </tr>`;
     }).join('');
 }
 
-function renderCantSellRows(items) {
-    return items.map((item, i) => {
-        const prefix = item.count > 1 ? `<span class="text-secondary">${item.count}x </span>` : '';
-        const data = encodeURIComponent(JSON.stringify({...item, avan_unit: null}));
-        return `<tr class="bundle-row" data-item="${data}" style="cursor:pointer">
-            <td class="text-secondary ps-3">${i + 1}</td>
-            <td><div class="d-flex align-items-center gap-2">${itemIcon(item.icon)}<span>${prefix}${item.name}</span></div></td>
-            <td class="text-center">${item.count}</td>
-            <td class="text-end pe-3 text-secondary">$${item.steam_unit.toFixed(2)}</td>
+function cantRows(items) {
+    return items.map((it, i) => {
+        const d = encodeURIComponent(JSON.stringify({...it, avan_unit: null}));
+        return `<tr class="bundle-row" data-item="${d}">
+            <td>${i+1}</td>
+            <td><div class="item-cell">${icon(it.icon)}<span>${it.count>1?`<span class="item-qty">${it.count}×</span>`:''}${it.name}</span></div></td>
+            <td class="text-center" style="font-family:var(--fm);font-size:12px">${it.count}</td>
+            <td class="text-end pe-3"><span class="price-s">$${it.steam_unit.toFixed(2)}</span></td>
         </tr>`;
     }).join('');
 }
 
-function sortTable(tableId, col, type) {
-    const state = sortState[tableId] || {};
-    const dir = state.col === col && state.dir === 'asc' ? 'desc' : 'asc';
-    sortState[tableId] = {col, dir};
-
-    const items = [...tableItems[tableId]];
-    items.sort((a, b) => {
-        let va = a[col], vb = b[col];
-        if (type === 'str') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
-        if (va < vb) return dir === 'asc' ? -1 : 1;
-        if (va > vb) return dir === 'asc' ? 1 : -1;
-        return 0;
+// ── SORT ──
+function sortTable(tid, col, type) {
+    const s = sortState[tid] || {};
+    const dir = s.col === col && s.dir === 'asc' ? 'desc' : 'asc';
+    sortState[tid] = {col, dir};
+    const items = [...tableItems[tid]].sort((a,b) => {
+        let va=a[col], vb=b[col];
+        if (type==='str'){va=(va||'').toLowerCase();vb=(vb||'').toLowerCase();}
+        return va<vb ? (dir==='asc'?-1:1) : va>vb ? (dir==='asc'?1:-1) : 0;
     });
-
-    const isCant = tableId === 'cant-sell';
-    const container = document.querySelector(`#tab-${tableId} .table-responsive`);
-    const tbody = container.querySelector('tbody');
+    const cont = document.querySelector(`#tab-${tid} .table-responsive`);
+    const tbody = cont.querySelector('tbody');
     const totalRow = tbody.querySelector('.total-row');
-    tbody.innerHTML = isCant ? renderCantSellRows(items) : renderSellRows(items);
+    tbody.innerHTML = tid==='cant-sell' ? cantRows(items) : sellRows(items);
     tbody.appendChild(totalRow);
-
-    container.querySelectorAll('th.sortable').forEach(th => {
-        th.classList.remove('sort-asc', 'sort-desc');
+    cont.querySelectorAll('th.sortable').forEach(th => {
+        th.classList.remove('sort-asc','sort-desc');
         th.querySelector('.sort-icon').textContent = '↕';
     });
-    const activeEl = container.querySelector(`th[data-col="${col}"]`);
-    if (activeEl) {
-        activeEl.classList.add(dir === 'asc' ? 'sort-asc' : 'sort-desc');
-        activeEl.querySelector('.sort-icon').textContent = dir === 'asc' ? '▲' : '▼';
-    }
+    const el = cont.querySelector(`th[data-col="${col}"]`);
+    if (el) { el.classList.add(dir==='asc'?'sort-asc':'sort-desc'); el.querySelector('.sort-icon').textContent = dir==='asc'?'▲':'▼'; }
 }
 
-function filterTable(tableId) {
-    const query = document.getElementById(`search-${tableId}`).value.toLowerCase();
-    const rows = document.querySelectorAll(`#tab-${tableId} tr.bundle-row`);
-    rows.forEach(row => {
-        const name = row.cells[1].textContent.toLowerCase();
-        row.style.display = name.includes(query) ? '' : 'none';
+// ── FILTER ──
+function filterTable(tid) {
+    const q = document.getElementById(`search-${tid}`).value.toLowerCase();
+    document.querySelectorAll(`#tab-${tid} tr.bundle-row`).forEach(r => {
+        r.style.display = r.cells[1].textContent.toLowerCase().includes(q) ? '' : 'none';
     });
 }
 
-function buildSellTable(items, totals, tableId) {
-    tableItems[tableId] = items;
-    tableTotals[tableId] = totals;
-    if (!items.length) return '<div class="empty-state">No data</div>';
-    return `<div class="p-2"><input id="search-${tableId}" type="text" class="form-control form-control-sm" placeholder="Search..." oninput="filterTable('${tableId}')"></div>
-    <div class="table-responsive">
-        <table class="table table-sm mb-0">
-            <thead><tr>
-                <th class="ps-3" style="width:40px">#</th>
-                <th class="sortable" data-col="name" onclick="sortTable('${tableId}','name','str')">Item <span class="sort-icon">↕</span></th>
-                <th class="sortable text-center" style="width:70px" data-col="count" onclick="sortTable('${tableId}','count','num')">Qty <span class="sort-icon">↕</span></th>
-                <th class="sortable text-end" style="width:100px" data-col="avan_unit" onclick="sortTable('${tableId}','avan_unit','num')">Avan <span class="sort-icon">↕</span></th>
-                <th class="sortable text-end" style="width:100px" data-col="steam_unit" onclick="sortTable('${tableId}','steam_unit','num')">Steam <span class="sort-icon">↕</span></th>
-                <th class="sortable text-end pe-3" style="width:100px" data-col="ratio" onclick="sortTable('${tableId}','ratio','num')">Rate <span class="sort-icon">↕</span></th>
-            </tr></thead>
-            <tbody>
-                ${renderSellRows(items)}
-                <tr class="total-row">
-                    <td colspan="2" class="ps-3">Total</td>
-                    <td class="text-center">${totals.count}</td>
-                    <td class="text-end" style="color:#3fb950">$${totals.avan.toFixed(2)}</td>
-                    <td class="text-end text-secondary">$${totals.steam.toFixed(2)}</td>
-                    <td class="text-end pe-3">${ratioBadge(totals.ratio)}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>`;
+// ── TABLE BUILDERS ──
+function buildSellTable(items, tots, tid) {
+    tableItems[tid] = items; tableTotals[tid] = tots;
+    if (!items.length) return '<div class="empty-state">— no data —</div>';
+    return `<div class="search-bar"><input id="search-${tid}" class="search-input" type="text" placeholder="Search items…" oninput="filterTable('${tid}')"></div>
+    <div class="table-responsive"><table class="data-table">
+        <thead><tr>
+            <th style="width:40px">#</th>
+            <th class="sortable" data-col="name" onclick="sortTable('${tid}','name','str')">Item <span class="sort-icon">↕</span></th>
+            <th class="sortable text-center" style="width:60px" data-col="count" onclick="sortTable('${tid}','count','num')">Qty <span class="sort-icon">↕</span></th>
+            <th class="sortable text-end" style="width:100px" data-col="avan_unit" onclick="sortTable('${tid}','avan_unit','num')">Avan <span class="sort-icon">↕</span></th>
+            <th class="sortable text-end" style="width:100px" data-col="steam_unit" onclick="sortTable('${tid}','steam_unit','num')">Steam <span class="sort-icon">↕</span></th>
+            <th class="sortable text-end pe-3" style="width:100px" data-col="ratio" onclick="sortTable('${tid}','ratio','num')">Rate <span class="sort-icon">↕</span></th>
+        </tr></thead>
+        <tbody>
+            ${sellRows(items)}
+            <tr class="total-row">
+                <td colspan="2" style="padding-left:16px">Total</td>
+                <td class="text-center" style="font-family:var(--fm);font-size:12px">${tots.count}</td>
+                <td class="text-end"><span class="price-a">$${tots.avan.toFixed(2)}</span></td>
+                <td class="text-end"><span class="price-s">$${tots.steam.toFixed(2)}</span></td>
+                <td class="text-end pe-3">${ratioBadge(tots.ratio)}</td>
+            </tr>
+        </tbody>
+    </table></div>`;
 }
 
-function buildCantSellTable(items, totals, tableId) {
-    tableItems[tableId] = items;
-    tableTotals[tableId] = totals;
-    if (!items.length) return '<div class="empty-state">No data</div>';
-    return `<div class="p-2"><input id="search-${tableId}" type="text" class="form-control form-control-sm" placeholder="Search..." oninput="filterTable('${tableId}')"></div>
-    <div class="table-responsive">
-        <table class="table table-sm mb-0">
-            <thead><tr>
-                <th class="ps-3" style="width:40px">#</th>
-                <th class="sortable" data-col="name" onclick="sortTable('${tableId}','name','str')">Item <span class="sort-icon">↕</span></th>
-                <th class="sortable text-center" style="width:70px" data-col="count" onclick="sortTable('${tableId}','count','num')">Qty <span class="sort-icon">↕</span></th>
-                <th class="sortable text-end pe-3" style="width:100px" data-col="steam_unit" onclick="sortTable('${tableId}','steam_unit','num')">Steam <span class="sort-icon">↕</span></th>
-            </tr></thead>
-            <tbody>
-                ${renderCantSellRows(items)}
-                <tr class="total-row">
-                    <td colspan="2" class="ps-3">Total</td>
-                    <td class="text-center">${totals.count}</td>
-                    <td class="text-end pe-3 text-secondary">$${totals.steam.toFixed(2)}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>`;
+function buildCantTable(items, tots, tid) {
+    tableItems[tid] = items; tableTotals[tid] = tots;
+    if (!items.length) return '<div class="empty-state">— no data —</div>';
+    return `<div class="search-bar"><input id="search-${tid}" class="search-input" type="text" placeholder="Search items…" oninput="filterTable('${tid}')"></div>
+    <div class="table-responsive"><table class="data-table">
+        <thead><tr>
+            <th style="width:40px">#</th>
+            <th class="sortable" data-col="name" onclick="sortTable('${tid}','name','str')">Item <span class="sort-icon">↕</span></th>
+            <th class="sortable text-center" style="width:60px" data-col="count" onclick="sortTable('${tid}','count','num')">Qty <span class="sort-icon">↕</span></th>
+            <th class="sortable text-end pe-3" style="width:100px" data-col="steam_unit" onclick="sortTable('${tid}','steam_unit','num')">Steam <span class="sort-icon">↕</span></th>
+        </tr></thead>
+        <tbody>
+            ${cantRows(items)}
+            <tr class="total-row">
+                <td colspan="2" style="padding-left:16px">Total</td>
+                <td class="text-center" style="font-family:var(--fm);font-size:12px">${tots.count}</td>
+                <td class="text-end pe-3"><span class="price-s">$${tots.steam.toFixed(2)}</span></td>
+            </tr>
+        </tbody>
+    </table></div>`;
 }
 
+// ── ANALYZE ──
 async function analyze() {
-    const invHtml = document.getElementById('invHtml').value.trim();
-    const avanText = document.getElementById('avanText').value.trim();
+    const invHtml    = document.getElementById('invHtml').value.trim();
+    const avanText   = document.getElementById('avanText').value.trim();
     const minPercent = parseFloat(document.getElementById('minPercent').value) || 0;
-    const steamId = document.getElementById('steamId').value.trim();
-
-    if (!invHtml || !avanText) {
-        alert('Please fill in both data fields');
-        return;
-    }
-    if (!steamId) {
-        alert('Please enter your Steam ID');
-        return;
-    }
+    const steamId    = document.getElementById('steamId').value.trim();
+    if (!invHtml || !avanText) { alert('Please fill in both data fields'); return; }
+    if (!steamId)              { alert('Please enter your Steam ID'); return; }
 
     const btn = document.getElementById('analyzeBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
-
+    btn.disabled = true; btn.textContent = 'Loading…';
     try {
         const resp = await fetch('/analyze', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ inv_html: invHtml, avan_text: avanText, min_percent: minPercent, steam_id: steamId })
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({inv_html:invHtml, avan_text:avanText, min_percent:minPercent, steam_id:steamId})
         });
         const data = await resp.json();
         if (data.error) { alert('Error: ' + data.error); return; }
         renderResults(data, minPercent);
-    } catch (e) {
+    } catch(e) {
         alert('Connection error: ' + e.message);
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = 'Analyze';
+        btn.disabled = false; btn.textContent = 'Analyze';
     }
 }
 
+// ── RENDER ──
 function renderResults(data, minPercent) {
     const t = data.totals;
 
     document.getElementById('statsRow').innerHTML = `
-        <div class="col"><div class="stat-card">
-            <div class="stat-value" style="color:#e6edf3">$${t.total_steam_all}</div>
-            <div class="stat-label">TOTAL STEAM · ${t.total_items_all} items</div>
-        </div></div>
-        <div class="col"><div class="stat-card">
-            <div class="stat-value" style="color:#3fb950">$${t.can_sell_avan}</div>
-            <div class="stat-label">AVAN · ${t.can_sell_count} items</div>
-        </div></div>
-        <div class="col"><div class="stat-card">
-            <div class="stat-value" style="color:#58a6ff">$${t.can_sell_steam}</div>
-            <div class="stat-label">STEAM · ${t.can_sell_count} items</div>
-        </div></div>
-        <div class="col"><div class="stat-card">
-            <div class="stat-value" style="color:#d29922">${t.can_sell_ratio}%</div>
-            <div class="stat-label">OVERALL RATE</div>
-        </div></div>
-        <div class="col"><div class="stat-card">
-            <div class="stat-value" style="color:#8b949e">$${t.cant_sell_steam}</div>
-            <div class="stat-label">CAN'T SELL · ${t.cant_sell_count} items</div>
-        </div></div>
-    `;
+        <div class="stat-card s-white">
+            <div class="stat-value">$${t.total_steam_all}</div>
+            <div class="stat-label">Total Steam</div>
+            <div class="stat-sub">${t.total_items_all} items</div>
+        </div>
+        <div class="stat-card s-green">
+            <div class="stat-value">$${t.can_sell_avan}</div>
+            <div class="stat-label">Avan Payout</div>
+            <div class="stat-sub">${t.can_sell_count} items · after fees</div>
+        </div>
+        <div class="stat-card s-blue">
+            <div class="stat-value">$${t.can_sell_steam}</div>
+            <div class="stat-label">Steam Sellable</div>
+            <div class="stat-sub">${t.can_sell_count} items</div>
+        </div>
+        <div class="stat-card s-yellow">
+            <div class="stat-value">${t.can_sell_ratio}%</div>
+            <div class="stat-label">Overall Rate</div>
+            <div class="stat-sub">net / steam</div>
+        </div>
+        <div class="stat-card s-gray">
+            <div class="stat-value">$${t.cant_sell_steam}</div>
+            <div class="stat-label">Can't Sell</div>
+            <div class="stat-sub">${t.cant_sell_count} items</div>
+        </div>`;
 
-    document.getElementById('badge-can-sell').textContent = t.can_sell_count;
+    document.getElementById('badge-can-sell').textContent  = t.can_sell_count;
     document.getElementById('badge-cant-sell').textContent = t.cant_sell_count;
-    document.getElementById('badge-best').textContent = 20;
-    document.getElementById('badge-worst').textContent = 20;
+    document.getElementById('badge-best').textContent      = 20;
+    document.getElementById('badge-worst').textContent     = 20;
 
-    const filteredLabel = minPercent > 0 ? `Above ${minPercent}%` : 'Above Threshold';
-    document.getElementById('tab-filtered-label').innerHTML =
-        `${filteredLabel} <span class="badge bg-success ms-1">${t.filtered_count}</span>`;
+    const fl = minPercent > 0 ? `Above ${minPercent}%` : 'Above Threshold';
+    document.getElementById('tab-filtered-btn').innerHTML =
+        `${fl} <span class="tab-count ct-green" id="badge-filtered">${t.filtered_count}</span>`;
 
-    document.getElementById('tab-can-sell').innerHTML = buildSellTable(data.can_sell, {
-        count: t.can_sell_count, avan: t.can_sell_avan, steam: t.can_sell_steam, ratio: t.can_sell_ratio
-    }, 'can-sell');
-    document.getElementById('tab-filtered').innerHTML = buildSellTable(data.filtered, {
-        count: t.filtered_count, avan: t.filtered_avan, steam: t.filtered_steam, ratio: t.filtered_ratio
-    }, 'filtered');
-    document.getElementById('tab-cant-sell').innerHTML = buildCantSellTable(data.cant_sell, {
-        count: t.cant_sell_count, steam: t.cant_sell_steam
-    }, 'cant-sell');
-    document.getElementById('tab-best').innerHTML = buildSellTable(data.best, {
-        count: t.best_count, avan: t.best_avan, steam: t.best_steam, ratio: t.best_ratio
-    }, 'best');
-    document.getElementById('tab-worst').innerHTML = buildSellTable(data.worst, {
-        count: t.worst_count, avan: t.worst_avan, steam: t.worst_steam, ratio: t.worst_ratio
-    }, 'worst');
+    document.getElementById('tab-can-sell').innerHTML  = buildSellTable(data.can_sell,  {count:t.can_sell_count,  avan:t.can_sell_avan,  steam:t.can_sell_steam,  ratio:t.can_sell_ratio},  'can-sell');
+    document.getElementById('tab-filtered').innerHTML  = buildSellTable(data.filtered,  {count:t.filtered_count,  avan:t.filtered_avan,  steam:t.filtered_steam,  ratio:t.filtered_ratio},  'filtered');
+    document.getElementById('tab-cant-sell').innerHTML = buildCantTable(data.cant_sell, {count:t.cant_sell_count, steam:t.cant_sell_steam}, 'cant-sell');
+    document.getElementById('tab-best').innerHTML      = buildSellTable(data.best,      {count:t.best_count,      avan:t.best_avan,      steam:t.best_steam,      ratio:t.best_ratio},      'best');
+    document.getElementById('tab-worst').innerHTML     = buildSellTable(data.worst,     {count:t.worst_count,     avan:t.worst_avan,     steam:t.worst_steam,     ratio:t.worst_ratio},     'worst');
 
-    document.getElementById('results').style.display = 'block';
-    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    // reset to first tab
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn')[0].classList.add('active');
+    document.getElementById('tab-can-sell').classList.add('active');
+
+    const res = document.getElementById('results');
+    res.style.display = 'block';
+    res.classList.remove('fade-up');
+    void res.offsetWidth;
+    res.classList.add('fade-up');
+    res.scrollIntoView({behavior:'smooth'});
     clearBundle();
 }
 
+// ── BUNDLE ──
 const bundle = {};
 
-document.addEventListener('click', function(e) {
+document.addEventListener('click', e => {
     const row = e.target.closest('tr.bundle-row');
     if (!row) return;
     const item = JSON.parse(decodeURIComponent(row.dataset.item));
-    const key = item.name;
-    if (bundle[key]) {
-        delete bundle[key];
-        row.classList.remove('selected');
-    } else {
-        bundle[key] = item;
-        row.classList.add('selected');
-    }
-    updateBundleBar();
+    if (bundle[item.name]) { delete bundle[item.name]; row.classList.remove('selected'); }
+    else                   { bundle[item.name] = item;  row.classList.add('selected'); }
+    updateBundle();
 });
 
 function removeFromBundle(key) {
     delete bundle[key];
-    document.querySelectorAll('tr.bundle-row').forEach(row => {
-        try {
-            const item = JSON.parse(decodeURIComponent(row.dataset.item));
-            if (item.name === key) row.classList.remove('selected');
-        } catch(e) {}
+    document.querySelectorAll('tr.bundle-row').forEach(r => {
+        try { if (JSON.parse(decodeURIComponent(r.dataset.item)).name === key) r.classList.remove('selected'); } catch(e){}
     });
-    updateBundleBar();
+    updateBundle();
 }
 
 function clearBundle() {
     Object.keys(bundle).forEach(k => delete bundle[k]);
     document.querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
-    updateBundleBar();
+    updateBundle();
 }
 
-document.addEventListener('shown.bs.tab', function() {
-    clearBundle();
-});
-
-function updateBundleBar() {
+function updateBundle() {
     const items = Object.values(bundle);
     const bar = document.getElementById('bundle-bar');
-    if (!items.length) {
-        bar.style.display = 'none';
-        document.body.classList.remove('has-bundle');
-        return;
-    }
+    if (!items.length) { bar.style.display='none'; document.body.classList.remove('has-bundle'); return; }
     bar.style.display = 'block';
     document.body.classList.add('has-bundle');
 
-    const totalAvan = items.reduce((s, e) => s + (e.avan_unit != null ? e.avan_unit * e.count : 0), 0);
-    const totalSteam = items.reduce((s, e) => s + e.steam_unit * e.count, 0);
-    const totalCount = items.reduce((s, e) => s + e.count, 0);
+    const tAvan  = items.reduce((s,e) => s + (e.avan_unit!=null ? e.avan_unit*e.count : 0), 0);
+    const tSteam = items.reduce((s,e) => s + e.steam_unit*e.count, 0);
+    const tCount = items.reduce((s,e) => s + e.count, 0);
+    const rate   = tSteam > 0 ? tAvan/tSteam*100 : 0;
 
-    const bundleRate = totalSteam > 0 ? (totalAvan / totalSteam * 100) : 0;
-    document.getElementById('bundle-avan').textContent = totalAvan.toFixed(2);
-    document.getElementById('bundle-steam').textContent = totalSteam.toFixed(2);
-    document.getElementById('bundle-rate').textContent = bundleRate.toFixed(2);
-    document.getElementById('bundle-count').textContent = totalCount;
+    document.getElementById('bundle-avan').textContent  = tAvan.toFixed(2);
+    document.getElementById('bundle-steam').textContent = tSteam.toFixed(2);
+    document.getElementById('bundle-rate').textContent  = rate.toFixed(2);
+    document.getElementById('bundle-count').textContent = tCount;
 
-    document.getElementById('bundle-items').innerHTML = items.map(e => {
-        const prefix = e.count > 1 ? `${e.count}x ` : '';
-        const price = e.avan_unit != null
-            ? `<span style="color:#3fb950">$${(e.avan_unit * e.count).toFixed(2)}</span>`
-            : `<span class="text-secondary">$${(e.steam_unit * e.count).toFixed(2)}</span>`;
-        return `<span class="bundle-item">
-            ${prefix}${e.name} ${price}
-            <span class="remove" data-key="${encodeURIComponent(e.name)}" onclick="event.stopPropagation(); removeFromBundle(decodeURIComponent(this.dataset.key))">×</span>
+    document.getElementById('bundle-chips').innerHTML = items.map(e => {
+        const price = e.avan_unit!=null
+            ? `<span style="color:var(--green)">$${(e.avan_unit*e.count).toFixed(2)}</span>`
+            : `<span style="color:var(--text-muted)">$${(e.steam_unit*e.count).toFixed(2)}</span>`;
+        return `<span class="bchip">
+            ${e.count>1?`<span style="color:var(--text-muted)">${e.count}×</span>`:''}${e.name} ${price}
+            <span class="bchip-x" data-key="${encodeURIComponent(e.name)}"
+                onclick="event.stopPropagation();removeFromBundle(decodeURIComponent(this.dataset.key))">×</span>
         </span>`;
     }).join('');
 }
