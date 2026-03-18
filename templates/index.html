@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avan Skin Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #0d1117; color: #e6edf3; }
+        .card-panel { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; }
+        textarea {
+            background: #0d1117 !important; color: #e6edf3 !important;
+            border-color: #30363d !important; font-family: monospace; font-size: 12px;
+            resize: vertical;
+        }
+        textarea:focus { border-color: #58a6ff !important; box-shadow: 0 0 0 2px rgba(88,166,255,0.15) !important; }
+        .form-control { background: #0d1117; color: #e6edf3; border-color: #30363d; }
+        .form-control:focus { background: #0d1117; color: #e6edf3; border-color: #58a6ff; box-shadow: 0 0 0 2px rgba(88,166,255,0.15); }
+        .nav-tabs { border-color: #30363d; }
+        .nav-tabs .nav-link { color: #8b949e; border-color: transparent; }
+        .nav-tabs .nav-link:hover { color: #e6edf3; border-color: transparent; }
+        .nav-tabs .nav-link.active { background: #161b22; border-color: #30363d #30363d #161b22; color: #58a6ff; }
+        .table { color: #e6edf3; }
+        .table thead th { background: #21262d; color: #8b949e; border-color: #30363d; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+        .table td, .table th { border-color: #21262d; font-size: 13px; vertical-align: middle; }
+        .table tbody tr:hover td { background: #1c2128; }
+        .total-row td { background: #1c2d3a !important; font-weight: 600; border-top: 2px solid #58a6ff !important; color: #e6edf3; }
+        .ratio-badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+        .r-excellent { background: #1a4731; color: #3fb950; }
+        .r-good     { background: #1c3a2e; color: #56d364; }
+        .r-ok       { background: #2d2a1e; color: #d29922; }
+        .r-warn     { background: #2d2210; color: #e3b341; }
+        .r-poor     { background: #2d1e1e; color: #f85149; }
+        .stat-card { background: #21262d; border-radius: 8px; padding: 14px 18px; height: 100%; }
+        .stat-value { font-size: 22px; font-weight: 700; line-height: 1.2; }
+        .stat-label { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
+        #results { display: none; }
+        .tab-content { background: #161b22; border: 1px solid #30363d; border-top: none; border-radius: 0 0 10px 10px; }
+        .empty-state { padding: 40px; text-align: center; color: #8b949e; }
+        #bundle-bar { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #161b22; border-top: 1px solid #30363d; padding: 12px 24px; z-index: 1000; }
+        .bundle-item { display: inline-flex; align-items: center; gap: 6px; background: #21262d; border-radius: 6px; padding: 3px 8px; margin: 2px; font-size: 12px; }
+        .bundle-item .remove { cursor: pointer; color: #8b949e; font-size: 14px; line-height: 1; }
+        .bundle-item .remove:hover { color: #f85149; }
+        tr.selected td { background: #1c2d3a !important; }
+        body.has-bundle { padding-bottom: 80px; }
+        th.sortable { cursor: pointer; user-select: none; }
+        th.sortable:hover { color: #e6edf3 !important; }
+        .sort-icon { font-size: 10px; margin-left: 4px; opacity: 0.4; }
+        th.sort-asc .sort-icon, th.sort-desc .sort-icon { opacity: 1; color: #58a6ff; }
+    </style>
+</head>
+<body>
+<div class="container-fluid p-4" style="max-width: 1400px;">
+
+    <div class="d-flex align-items-center mb-4">
+        <h4 class="mb-0" style="color: #58a6ff;">Avan Skin Analyzer</h4>
+    </div>
+
+    <!-- Input -->
+    <div class="card-panel mb-4">
+        <div class="row g-3">
+            <div class="col-md-5">
+                <label class="form-label text-secondary small fw-semibold">INVENTORY HTML</label>
+                <textarea id="invHtml" class="form-control" rows="9"></textarea>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label text-secondary small fw-semibold">AVAN ITEMS</label>
+                <textarea id="avanText" class="form-control" rows="9"></textarea>
+            </div>
+            <div class="col-md-2 d-flex flex-column gap-3">
+                <div>
+                    <label class="form-label text-secondary small fw-semibold">MIN. RATE (%)</label>
+                    <input type="number" id="minPercent" class="form-control" value="65" min="0" max="100">
+                </div>
+                <button class="btn btn-primary mt-auto w-100" onclick="analyze()" id="analyzeBtn" style="height: 44px;">
+                    Analyze
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div id="results">
+
+        <!-- Stats -->
+        <div class="row g-3 mb-4" id="statsRow"></div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" id="resultTabs">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#tab-can-sell">
+                    Can Sell <span class="badge bg-primary ms-1" id="badge-can-sell"></span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#tab-filtered" id="tab-filtered-label">
+                    Above Threshold <span class="badge bg-success ms-1" id="badge-filtered"></span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#tab-cant-sell">
+                    Can't Sell <span class="badge bg-danger ms-1" id="badge-cant-sell"></span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#tab-best">20 Best <span class="badge bg-success ms-1" id="badge-best"></span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#tab-worst">20 Worst <span class="badge bg-danger ms-1" id="badge-worst"></span></a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active p-1" id="tab-can-sell"></div>
+            <div class="tab-pane fade p-1" id="tab-filtered"></div>
+            <div class="tab-pane fade p-1" id="tab-cant-sell"></div>
+            <div class="tab-pane fade p-1" id="tab-best"></div>
+            <div class="tab-pane fade p-1" id="tab-worst"></div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Bundle Calculator Bar -->
+<div id="bundle-bar">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div class="d-flex align-items-center gap-3 me-2">
+            <span class="text-secondary small fw-semibold">BUNDLE</span>
+            <span style="color:#3fb950; font-weight:700; font-size:16px">Avan: $<span id="bundle-avan">0.00</span></span>
+            <span class="text-secondary" style="font-size:14px">Steam: $<span id="bundle-steam">0.00</span></span>
+            <span style="color:#d29922; font-weight:600; font-size:14px">Rate: <span id="bundle-rate">0.00</span>%</span>
+            <span class="text-secondary small"><span id="bundle-count">0</span> items</span>
+        </div>
+        <div id="bundle-items" class="flex-grow-1 d-flex flex-wrap"></div>
+        <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="clearBundle()">Clear</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function ratioBadge(ratio) {
+    let cls;
+    if (ratio >= 70)      cls = 'r-excellent';
+    else if (ratio >= 65) cls = 'r-good';
+    else if (ratio >= 60) cls = 'r-ok';
+    else if (ratio >= 50) cls = 'r-warn';
+    else                  cls = 'r-poor';
+    return `<span class="ratio-badge ${cls}">${ratio.toFixed(2)}%</span>`;
+}
+
+const tableItems = {};
+const tableTotals = {};
+const sortState = {};
+
+const STEAM_CDN = 'https://community.cloudflare.steamstatic.com/economy/image/';
+
+function itemIcon(icon) {
+    if (!icon) return '<div style="width:32px;height:32px;background:#21262d;border-radius:4px"></div>';
+    return `<img src="${STEAM_CDN}${icon}/32fx32f" width="32" height="32" style="border-radius:4px;object-fit:contain;background:#21262d" loading="lazy">`;
+}
+
+function renderSellRows(items) {
+    return items.map((item, i) => {
+        const prefix = item.count > 1 ? `<span class="text-secondary">${item.count}x </span>` : '';
+        const data = encodeURIComponent(JSON.stringify(item));
+        return `<tr class="bundle-row" data-item="${data}" style="cursor:pointer">
+            <td class="text-secondary ps-3">${i + 1}</td>
+            <td><div class="d-flex align-items-center gap-2">${itemIcon(item.icon)}<span>${prefix}${item.name}</span></div></td>
+            <td class="text-center">${item.count}</td>
+            <td class="text-end" style="color:#3fb950">$${item.avan_unit.toFixed(2)}</td>
+            <td class="text-end text-secondary">$${item.steam_unit.toFixed(2)}</td>
+            <td class="text-end pe-3">${ratioBadge(item.ratio)}</td>
+        </tr>`;
+    }).join('');
+}
+
+function renderCantSellRows(items) {
+    return items.map((item, i) => {
+        const prefix = item.count > 1 ? `<span class="text-secondary">${item.count}x </span>` : '';
+        const data = encodeURIComponent(JSON.stringify({...item, avan_unit: null}));
+        return `<tr class="bundle-row" data-item="${data}" style="cursor:pointer">
+            <td class="text-secondary ps-3">${i + 1}</td>
+            <td><div class="d-flex align-items-center gap-2">${itemIcon(item.icon)}<span>${prefix}${item.name}</span></div></td>
+            <td class="text-center">${item.count}</td>
+            <td class="text-end pe-3 text-secondary">$${item.steam_unit.toFixed(2)}</td>
+        </tr>`;
+    }).join('');
+}
+
+function sortTable(tableId, col, type) {
+    const state = sortState[tableId] || {};
+    const dir = state.col === col && state.dir === 'asc' ? 'desc' : 'asc';
+    sortState[tableId] = {col, dir};
+
+    const items = [...tableItems[tableId]];
+    items.sort((a, b) => {
+        let va = a[col], vb = b[col];
+        if (type === 'str') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+        if (va < vb) return dir === 'asc' ? -1 : 1;
+        if (va > vb) return dir === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    const isCant = tableId === 'cant-sell';
+    const container = document.querySelector(`#tab-${tableId} .table-responsive`);
+    const tbody = container.querySelector('tbody');
+    const totalRow = tbody.querySelector('.total-row');
+    tbody.innerHTML = isCant ? renderCantSellRows(items) : renderSellRows(items);
+    tbody.appendChild(totalRow);
+
+    container.querySelectorAll('th.sortable').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        th.querySelector('.sort-icon').textContent = '↕';
+    });
+    const activeEl = container.querySelector(`th[data-col="${col}"]`);
+    if (activeEl) {
+        activeEl.classList.add(dir === 'asc' ? 'sort-asc' : 'sort-desc');
+        activeEl.querySelector('.sort-icon').textContent = dir === 'asc' ? '▲' : '▼';
+    }
+}
+
+function filterTable(tableId) {
+    const query = document.getElementById(`search-${tableId}`).value.toLowerCase();
+    const rows = document.querySelectorAll(`#tab-${tableId} tr.bundle-row`);
+    rows.forEach(row => {
+        const name = row.cells[1].textContent.toLowerCase();
+        row.style.display = name.includes(query) ? '' : 'none';
+    });
+}
+
+function buildSellTable(items, totals, tableId) {
+    tableItems[tableId] = items;
+    tableTotals[tableId] = totals;
+    if (!items.length) return '<div class="empty-state">No data</div>';
+    return `<div class="p-2"><input id="search-${tableId}" type="text" class="form-control form-control-sm" placeholder="Search..." oninput="filterTable('${tableId}')"></div>
+    <div class="table-responsive">
+        <table class="table table-sm mb-0">
+            <thead><tr>
+                <th class="ps-3" style="width:40px">#</th>
+                <th class="sortable" data-col="name" onclick="sortTable('${tableId}','name','str')">Item <span class="sort-icon">↕</span></th>
+                <th class="sortable text-center" style="width:70px" data-col="count" onclick="sortTable('${tableId}','count','num')">Qty <span class="sort-icon">↕</span></th>
+                <th class="sortable text-end" style="width:100px" data-col="avan_unit" onclick="sortTable('${tableId}','avan_unit','num')">Avan <span class="sort-icon">↕</span></th>
+                <th class="sortable text-end" style="width:100px" data-col="steam_unit" onclick="sortTable('${tableId}','steam_unit','num')">Steam <span class="sort-icon">↕</span></th>
+                <th class="sortable text-end pe-3" style="width:100px" data-col="ratio" onclick="sortTable('${tableId}','ratio','num')">Rate <span class="sort-icon">↕</span></th>
+            </tr></thead>
+            <tbody>
+                ${renderSellRows(items)}
+                <tr class="total-row">
+                    <td colspan="2" class="ps-3">Total</td>
+                    <td class="text-center">${totals.count}</td>
+                    <td class="text-end" style="color:#3fb950">$${totals.avan.toFixed(2)}</td>
+                    <td class="text-end text-secondary">$${totals.steam.toFixed(2)}</td>
+                    <td class="text-end pe-3">${ratioBadge(totals.ratio)}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>`;
+}
+
+function buildCantSellTable(items, totals, tableId) {
+    tableItems[tableId] = items;
+    tableTotals[tableId] = totals;
+    if (!items.length) return '<div class="empty-state">No data</div>';
+    return `<div class="p-2"><input id="search-${tableId}" type="text" class="form-control form-control-sm" placeholder="Search..." oninput="filterTable('${tableId}')"></div>
+    <div class="table-responsive">
+        <table class="table table-sm mb-0">
+            <thead><tr>
+                <th class="ps-3" style="width:40px">#</th>
+                <th class="sortable" data-col="name" onclick="sortTable('${tableId}','name','str')">Item <span class="sort-icon">↕</span></th>
+                <th class="sortable text-center" style="width:70px" data-col="count" onclick="sortTable('${tableId}','count','num')">Qty <span class="sort-icon">↕</span></th>
+                <th class="sortable text-end pe-3" style="width:100px" data-col="steam_unit" onclick="sortTable('${tableId}','steam_unit','num')">Steam <span class="sort-icon">↕</span></th>
+            </tr></thead>
+            <tbody>
+                ${renderCantSellRows(items)}
+                <tr class="total-row">
+                    <td colspan="2" class="ps-3">Total</td>
+                    <td class="text-center">${totals.count}</td>
+                    <td class="text-end pe-3 text-secondary">$${totals.steam.toFixed(2)}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>`;
+}
+
+async function analyze() {
+    const invHtml = document.getElementById('invHtml').value.trim();
+    const avanText = document.getElementById('avanText').value.trim();
+    const minPercent = parseFloat(document.getElementById('minPercent').value) || 0;
+
+    if (!invHtml || !avanText) {
+        alert('Please fill in both data fields');
+        return;
+    }
+
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
+
+    try {
+        const resp = await fetch('/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ inv_html: invHtml, avan_text: avanText, min_percent: minPercent })
+        });
+        const data = await resp.json();
+        if (data.error) { alert('Error: ' + data.error); return; }
+        renderResults(data, minPercent);
+    } catch (e) {
+        alert('Connection error: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Analyze';
+    }
+}
+
+function renderResults(data, minPercent) {
+    const t = data.totals;
+
+    document.getElementById('statsRow').innerHTML = `
+        <div class="col"><div class="stat-card">
+            <div class="stat-value" style="color:#e6edf3">$${t.total_steam_all}</div>
+            <div class="stat-label">TOTAL STEAM · ${t.total_items_all} items</div>
+        </div></div>
+        <div class="col"><div class="stat-card">
+            <div class="stat-value" style="color:#3fb950">$${t.can_sell_avan}</div>
+            <div class="stat-label">AVAN · ${t.can_sell_count} items</div>
+        </div></div>
+        <div class="col"><div class="stat-card">
+            <div class="stat-value" style="color:#58a6ff">$${t.can_sell_steam}</div>
+            <div class="stat-label">STEAM · ${t.can_sell_count} items</div>
+        </div></div>
+        <div class="col"><div class="stat-card">
+            <div class="stat-value" style="color:#d29922">${t.can_sell_ratio}%</div>
+            <div class="stat-label">OVERALL RATE</div>
+        </div></div>
+        <div class="col"><div class="stat-card">
+            <div class="stat-value" style="color:#8b949e">$${t.cant_sell_steam}</div>
+            <div class="stat-label">CAN'T SELL · ${t.cant_sell_count} items</div>
+        </div></div>
+    `;
+
+    document.getElementById('badge-can-sell').textContent = t.can_sell_count;
+    document.getElementById('badge-cant-sell').textContent = t.cant_sell_count;
+    document.getElementById('badge-best').textContent = 20;
+    document.getElementById('badge-worst').textContent = 20;
+
+    const filteredLabel = minPercent > 0 ? `Above ${minPercent}%` : 'Above Threshold';
+    document.getElementById('tab-filtered-label').innerHTML =
+        `${filteredLabel} <span class="badge bg-success ms-1">${t.filtered_count}</span>`;
+
+    document.getElementById('tab-can-sell').innerHTML = buildSellTable(data.can_sell, {
+        count: t.can_sell_count, avan: t.can_sell_avan, steam: t.can_sell_steam, ratio: t.can_sell_ratio
+    }, 'can-sell');
+    document.getElementById('tab-filtered').innerHTML = buildSellTable(data.filtered, {
+        count: t.filtered_count, avan: t.filtered_avan, steam: t.filtered_steam, ratio: t.filtered_ratio
+    }, 'filtered');
+    document.getElementById('tab-cant-sell').innerHTML = buildCantSellTable(data.cant_sell, {
+        count: t.cant_sell_count, steam: t.cant_sell_steam
+    }, 'cant-sell');
+    document.getElementById('tab-best').innerHTML = buildSellTable(data.best, {
+        count: t.best_count, avan: t.best_avan, steam: t.best_steam, ratio: t.best_ratio
+    }, 'best');
+    document.getElementById('tab-worst').innerHTML = buildSellTable(data.worst, {
+        count: t.worst_count, avan: t.worst_avan, steam: t.worst_steam, ratio: t.worst_ratio
+    }, 'worst');
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    clearBundle();
+}
+
+const bundle = {};
+
+document.addEventListener('click', function(e) {
+    const row = e.target.closest('tr.bundle-row');
+    if (!row) return;
+    const item = JSON.parse(decodeURIComponent(row.dataset.item));
+    const key = item.name;
+    if (bundle[key]) {
+        delete bundle[key];
+        row.classList.remove('selected');
+    } else {
+        bundle[key] = item;
+        row.classList.add('selected');
+    }
+    updateBundleBar();
+});
+
+function removeFromBundle(key) {
+    delete bundle[key];
+    document.querySelectorAll('tr.bundle-row').forEach(row => {
+        try {
+            const item = JSON.parse(decodeURIComponent(row.dataset.item));
+            if (item.name === key) row.classList.remove('selected');
+        } catch(e) {}
+    });
+    updateBundleBar();
+}
+
+function clearBundle() {
+    Object.keys(bundle).forEach(k => delete bundle[k]);
+    document.querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
+    updateBundleBar();
+}
+
+document.addEventListener('shown.bs.tab', function() {
+    clearBundle();
+});
+
+function updateBundleBar() {
+    const items = Object.values(bundle);
+    const bar = document.getElementById('bundle-bar');
+    if (!items.length) {
+        bar.style.display = 'none';
+        document.body.classList.remove('has-bundle');
+        return;
+    }
+    bar.style.display = 'block';
+    document.body.classList.add('has-bundle');
+
+    const totalAvan = items.reduce((s, e) => s + (e.avan_unit != null ? e.avan_unit * e.count : 0), 0);
+    const totalSteam = items.reduce((s, e) => s + e.steam_unit * e.count, 0);
+    const totalCount = items.reduce((s, e) => s + e.count, 0);
+
+    const bundleRate = totalSteam > 0 ? (totalAvan / totalSteam * 100) : 0;
+    document.getElementById('bundle-avan').textContent = totalAvan.toFixed(2);
+    document.getElementById('bundle-steam').textContent = totalSteam.toFixed(2);
+    document.getElementById('bundle-rate').textContent = bundleRate.toFixed(2);
+    document.getElementById('bundle-count').textContent = totalCount;
+
+    document.getElementById('bundle-items').innerHTML = items.map(e => {
+        const prefix = e.count > 1 ? `${e.count}x ` : '';
+        const price = e.avan_unit != null
+            ? `<span style="color:#3fb950">$${(e.avan_unit * e.count).toFixed(2)}</span>`
+            : `<span class="text-secondary">$${(e.steam_unit * e.count).toFixed(2)}</span>`;
+        return `<span class="bundle-item">
+            ${prefix}${e.name} ${price}
+            <span class="remove" data-key="${encodeURIComponent(e.name)}" onclick="event.stopPropagation(); removeFromBundle(decodeURIComponent(this.dataset.key))">×</span>
+        </span>`;
+    }).join('');
+}
+</script>
+</body>
+</html>
