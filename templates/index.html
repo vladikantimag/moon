@@ -426,7 +426,7 @@
             </div>
             <div class="col-md-5">
                 <label class="field-label">Moon Items</label>
-                <textarea id="avanText" class="form-control" rows="9" placeholder="Paste item list from moon.market…"></textarea>
+                <textarea id="moonText" class="form-control" rows="9" placeholder="Paste item list from moon.market…"></textarea>
             </div>
             <div class="col-md-2 d-flex flex-column gap-3">
                 <div>
@@ -485,7 +485,7 @@
         <div class="bdiv"></div>
         <div class="bstat">
             <div class="bstat-lbl">Moon</div>
-            <div class="bstat-val" style="color:var(--green)">$<span id="bundle-avan">0.00</span></div>
+            <div class="bstat-val" style="color:var(--green)">$<span id="bundle-moon">0.00</span></div>
         </div>
         <div class="bstat">
             <div class="bstat-lbl">Steam</div>
@@ -538,7 +538,7 @@ function sellRows(items) {
             <td>${i+1}</td>
             <td><div class="item-cell">${icon(it.icon)}<span>${it.count>1?`<span class="item-qty">${it.count}×</span>`:''}${it.name}</span></div></td>
             <td class="text-center" style="font-family:var(--fm);font-size:12px">${it.count}</td>
-            <td class="text-end"><span class="price-a">$${it.avan_unit.toFixed(2)}</span></td>
+            <td class="text-end"><span class="price-a">$${it.moon_unit.toFixed(2)}</span></td>
             <td class="text-end"><span class="price-s">$${it.steam_unit.toFixed(2)}</span></td>
             <td class="text-end">${ratioBadge(it.ratio)}</td>
         </tr>`;
@@ -547,7 +547,7 @@ function sellRows(items) {
 
 function cantRows(items) {
     return items.map((it, i) => {
-        const d = encodeURIComponent(JSON.stringify({...it, avan_unit: null}));
+        const d = encodeURIComponent(JSON.stringify({...it, moon_unit: null}));
         return `<tr class="bundle-row" data-item="${d}">
             <td>${i+1}</td>
             <td><div class="item-cell">${icon(it.icon)}<span>${it.count>1?`<span class="item-qty">${it.count}×</span>`:''}${it.name}</span></div></td>
@@ -598,7 +598,7 @@ function buildSellTable(items, tots, tid) {
             <th style="width:40px">#</th>
             <th class="sortable" data-col="name" onclick="sortTable('${tid}','name','str')">Item <span class="sort-icon">↕</span></th>
             <th class="sortable text-center" style="width:60px" data-col="count" onclick="sortTable('${tid}','count','num')">Qty <span class="sort-icon">↕</span></th>
-            <th class="sortable text-end" style="width:100px" data-col="avan_unit" onclick="sortTable('${tid}','avan_unit','num')">Moon <span class="sort-icon">↕</span></th>
+            <th class="sortable text-end" style="width:100px" data-col="moon_unit" onclick="sortTable('${tid}','moon_unit','num')">Moon <span class="sort-icon">↕</span></th>
             <th class="sortable text-end" style="width:100px" data-col="steam_unit" onclick="sortTable('${tid}','steam_unit','num')">Steam <span class="sort-icon">↕</span></th>
             <th class="sortable text-end pe-3" style="width:100px" data-col="ratio" onclick="sortTable('${tid}','ratio','num')">Rate <span class="sort-icon">↕</span></th>
         </tr></thead>
@@ -607,7 +607,7 @@ function buildSellTable(items, tots, tid) {
             <tr class="total-row">
                 <td colspan="2" style="padding-left:16px">Total</td>
                 <td class="text-center" style="font-family:var(--fm);font-size:12px">${tots.count}</td>
-                <td class="text-end"><span class="price-a">$${tots.avan.toFixed(2)}</span></td>
+                <td class="text-end"><span class="price-a">$${tots.moon.toFixed(2)}</span></td>
                 <td class="text-end"><span class="price-s">$${tots.steam.toFixed(2)}</span></td>
                 <td class="text-end pe-3">${ratioBadge(tots.ratio)}</td>
             </tr>
@@ -640,10 +640,10 @@ function buildCantTable(items, tots, tid) {
 // ── ANALYZE ──
 async function analyze() {
     const invHtml    = document.getElementById('invHtml').value.trim();
-    const avanText   = document.getElementById('avanText').value.trim();
+    const moonText   = document.getElementById('moonText').value.trim();
     const minPercent = parseFloat(document.getElementById('minPercent').value) || 0;
     const steamId    = document.getElementById('steamId').value.trim();
-    if (!invHtml || !avanText) { alert('Please fill in both data fields'); return; }
+    if (!invHtml || !moonText) { alert('Please fill in both data fields'); return; }
     if (!steamId)              { alert('Please enter your Steam ID'); return; }
 
     const btn = document.getElementById('analyzeBtn');
@@ -652,7 +652,7 @@ async function analyze() {
         const resp = await fetch('/analyze', {
             method: 'POST',
             headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({inv_html:invHtml, avan_text:avanText, min_percent:minPercent, steam_id:steamId})
+            body: JSON.stringify({inv_html:invHtml, moon_text:moonText, min_percent:minPercent, steam_id:steamId})
         });
         const data = await resp.json();
         if (data.error) { alert('Error: ' + data.error); return; }
@@ -675,7 +675,7 @@ function renderResults(data, minPercent) {
             <div class="stat-sub">${t.total_items_all} items</div>
         </div>
         <div class="stat-card s-green">
-            <div class="stat-value">$${t.can_sell_avan}</div>
+            <div class="stat-value">$${t.can_sell_moon}</div>
             <div class="stat-label">Moon Payout</div>
             <div class="stat-sub">${t.can_sell_count} items · after fees</div>
         </div>
@@ -704,11 +704,11 @@ function renderResults(data, minPercent) {
     document.getElementById('tab-filtered-btn').innerHTML =
         `${fl} <span class="tab-count ct-green" id="badge-filtered">${t.filtered_count}</span>`;
 
-    document.getElementById('tab-can-sell').innerHTML  = buildSellTable(data.can_sell,  {count:t.can_sell_count,  avan:t.can_sell_avan,  steam:t.can_sell_steam,  ratio:t.can_sell_ratio},  'can-sell');
-    document.getElementById('tab-filtered').innerHTML  = buildSellTable(data.filtered,  {count:t.filtered_count,  avan:t.filtered_avan,  steam:t.filtered_steam,  ratio:t.filtered_ratio},  'filtered');
+    document.getElementById('tab-can-sell').innerHTML  = buildSellTable(data.can_sell,  {count:t.can_sell_count,  moon:t.can_sell_moon,  steam:t.can_sell_steam,  ratio:t.can_sell_ratio},  'can-sell');
+    document.getElementById('tab-filtered').innerHTML  = buildSellTable(data.filtered,  {count:t.filtered_count,  moon:t.filtered_moon,  steam:t.filtered_steam,  ratio:t.filtered_ratio},  'filtered');
     document.getElementById('tab-cant-sell').innerHTML = buildCantTable(data.cant_sell, {count:t.cant_sell_count, steam:t.cant_sell_steam}, 'cant-sell');
-    document.getElementById('tab-best').innerHTML      = buildSellTable(data.best,      {count:t.best_count,      avan:t.best_avan,      steam:t.best_steam,      ratio:t.best_ratio},      'best');
-    document.getElementById('tab-worst').innerHTML     = buildSellTable(data.worst,     {count:t.worst_count,     avan:t.worst_avan,     steam:t.worst_steam,     ratio:t.worst_ratio},     'worst');
+    document.getElementById('tab-best').innerHTML      = buildSellTable(data.best,      {count:t.best_count,      moon:t.best_moon,      steam:t.best_steam,      ratio:t.best_ratio},      'best');
+    document.getElementById('tab-worst').innerHTML     = buildSellTable(data.worst,     {count:t.worst_count,     moon:t.worst_moon,     steam:t.worst_steam,     ratio:t.worst_ratio},     'worst');
 
     // reset to first tab
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -758,19 +758,19 @@ function updateBundle() {
     bar.style.display = 'block';
     document.body.classList.add('has-bundle');
 
-    const tAvan  = items.reduce((s,e) => s + (e.avan_unit!=null ? e.avan_unit*e.count : 0), 0);
+    const tMoon  = items.reduce((s,e) => s + (e.moon_unit!=null ? e.moon_unit*e.count : 0), 0);
     const tSteam = items.reduce((s,e) => s + e.steam_unit*e.count, 0);
     const tCount = items.reduce((s,e) => s + e.count, 0);
-    const rate   = tSteam > 0 ? tAvan/tSteam*100 : 0;
+    const rate   = tSteam > 0 ? tMoon/tSteam*100 : 0;
 
-    document.getElementById('bundle-avan').textContent  = tAvan.toFixed(2);
+    document.getElementById('bundle-moon').textContent  = tMoon.toFixed(2);
     document.getElementById('bundle-steam').textContent = tSteam.toFixed(2);
     document.getElementById('bundle-rate').textContent  = rate.toFixed(2);
     document.getElementById('bundle-count').textContent = tCount;
 
     document.getElementById('bundle-chips').innerHTML = items.map(e => {
-        const price = e.avan_unit!=null
-            ? `<span style="color:var(--green)">$${(e.avan_unit*e.count).toFixed(2)}</span>`
+        const price = e.moon_unit!=null
+            ? `<span style="color:var(--green)">$${(e.moon_unit*e.count).toFixed(2)}</span>`
             : `<span style="color:var(--text-muted)">$${(e.steam_unit*e.count).toFixed(2)}</span>`;
         return `<span class="bchip">
             ${e.count>1?`<span style="color:var(--text-muted)">${e.count}×</span>`:''}${e.name} ${price}

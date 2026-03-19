@@ -80,14 +80,14 @@ def load_moon_prices(text: str) -> Dict[str, float]:
     return moon_prices
 
 
-def run_analysis(inv_html: str, avan_text: str, min_percent: float, steam_id: str) -> dict:
+def run_analysis(inv_html: str, moon_text: str, min_percent: float, steam_id: str) -> dict:
     inv_items = load_inventory_names(steam_id)
     steam_prices = load_steam_prices_from_html(inv_html)
     n = min(len(inv_items), len(steam_prices))
     inv_items = inv_items[:n]
     steam_prices = steam_prices[:n]
 
-    avan_prices = load_moon_prices(avan_text)
+    moon_prices = load_moon_prices(moon_text)
 
     can_sell_grouped: Dict[str, dict] = {}
     cant_sell_grouped: Dict[str, dict] = {}
@@ -96,10 +96,10 @@ def run_analysis(inv_html: str, avan_text: str, min_percent: float, steam_id: st
         name = item["name"]
         icon = item["icon"]
         key = normalize_name(name)
-        avan_price = avan_prices.get(key)
-        if avan_price is not None:
+        moon_price = moon_prices.get(key)
+        if moon_price is not None:
             if key not in can_sell_grouped:
-                can_sell_grouped[key] = {"name": name, "icon": icon, "count": 1, "avan_unit": avan_price, "steam_sum": price}
+                can_sell_grouped[key] = {"name": name, "icon": icon, "count": 1, "moon_unit": moon_price, "steam_sum": price}
             else:
                 can_sell_grouped[key]["count"] += 1
                 can_sell_grouped[key]["steam_sum"] += price
@@ -113,16 +113,16 @@ def run_analysis(inv_html: str, avan_text: str, min_percent: float, steam_id: st
     can_sell_list = []
     for e in can_sell_grouped.values():
         count = e["count"]
-        avan_unit = e["avan_unit"]
+        moon_unit = e["moon_unit"]
         steam_unit = e["steam_sum"] / count if count > 0 else 0.0
-        ratio = (avan_unit / steam_unit * 100) if steam_unit > 0 else 0.0
+        ratio = (moon_unit / steam_unit * 100) if steam_unit > 0 else 0.0
         can_sell_list.append({
             "name": e["name"], "icon": e.get("icon", ""), "count": count,
-            "avan_unit": round(avan_unit, 2),
+            "moon_unit": round(moon_unit, 2),
             "steam_unit": round(steam_unit, 2),
             "ratio": round(ratio, 2),
         })
-    can_sell_list.sort(key=lambda x: x["avan_unit"] * x["count"], reverse=True)
+    can_sell_list.sort(key=lambda x: x["moon_unit"] * x["count"], reverse=True)
 
     cant_sell_list = []
     for e in cant_sell_grouped.values():
@@ -135,31 +135,31 @@ def run_analysis(inv_html: str, avan_text: str, min_percent: float, steam_id: st
         })
     cant_sell_list.sort(key=lambda x: x["steam_total"], reverse=True)
 
-    total_avan_gross = sum(e["avan_unit"] * e["count"] for e in can_sell_list)
-    total_avan_net = max(0.0, total_avan_gross * (1 - MOON_FEE_PERCENT) - MOON_FEE_FIXED)
+    total_moon_gross = sum(e["moon_unit"] * e["count"] for e in can_sell_list)
+    total_moon_net = max(0.0, total_moon_gross * (1 - MOON_FEE_PERCENT) - MOON_FEE_FIXED)
     total_steam_can = sum(e["steam_unit"] * e["count"] for e in can_sell_list)
     can_sell_count = sum(e["count"] for e in can_sell_list)
     cant_sell_count = sum(e["count"] for e in cant_sell_list)
     total_steam_cant = sum(e["steam_total"] for e in cant_sell_list)
-    overall_ratio = (total_avan_net / total_steam_can * 100) if total_steam_can > 0 else 0.0
+    overall_ratio = (total_moon_net / total_steam_can * 100) if total_steam_can > 0 else 0.0
 
     filtered_list = [e for e in can_sell_list if e["ratio"] >= min_percent] if min_percent > 0 else []
-    filtered_avan = sum(e["avan_unit"] * e["count"] for e in filtered_list)
+    filtered_moon = sum(e["moon_unit"] * e["count"] for e in filtered_list)
     filtered_steam = sum(e["steam_unit"] * e["count"] for e in filtered_list)
     filtered_count = sum(e["count"] for e in filtered_list)
-    filtered_ratio = (filtered_avan / filtered_steam * 100) if filtered_steam > 0 else 0.0
+    filtered_ratio = (filtered_moon / filtered_steam * 100) if filtered_steam > 0 else 0.0
 
     best_list = sorted(can_sell_list, key=lambda x: x["ratio"], reverse=True)[:20]
-    best_avan = sum(e["avan_unit"] * e["count"] for e in best_list)
+    best_moon = sum(e["moon_unit"] * e["count"] for e in best_list)
     best_steam = sum(e["steam_unit"] * e["count"] for e in best_list)
     best_count = sum(e["count"] for e in best_list)
-    best_ratio = (best_avan / best_steam * 100) if best_steam > 0 else 0.0
+    best_ratio = (best_moon / best_steam * 100) if best_steam > 0 else 0.0
 
     worst_list = sorted(can_sell_list, key=lambda x: x["ratio"])[:20]
-    worst_avan = sum(e["avan_unit"] * e["count"] for e in worst_list)
+    worst_moon = sum(e["moon_unit"] * e["count"] for e in worst_list)
     worst_steam = sum(e["steam_unit"] * e["count"] for e in worst_list)
     worst_count = sum(e["count"] for e in worst_list)
-    worst_ratio = (worst_avan / worst_steam * 100) if worst_steam > 0 else 0.0
+    worst_ratio = (worst_moon / worst_steam * 100) if worst_steam > 0 else 0.0
 
     return {
         "can_sell": can_sell_list,
@@ -168,7 +168,7 @@ def run_analysis(inv_html: str, avan_text: str, min_percent: float, steam_id: st
         "best": best_list,
         "worst": worst_list,
         "totals": {
-            "can_sell_avan": round(total_avan_net, 2),
+            "can_sell_moon": round(total_moon_net, 2),
             "can_sell_steam": round(total_steam_can, 2),
             "can_sell_ratio": round(overall_ratio, 2),
             "can_sell_count": can_sell_count,
@@ -176,15 +176,15 @@ def run_analysis(inv_html: str, avan_text: str, min_percent: float, steam_id: st
             "cant_sell_count": cant_sell_count,
             "total_steam_all": round(total_steam_can + total_steam_cant, 2),
             "total_items_all": can_sell_count + cant_sell_count,
-            "filtered_avan": round(filtered_avan, 2),
+            "filtered_moon": round(filtered_moon, 2),
             "filtered_steam": round(filtered_steam, 2),
             "filtered_ratio": round(filtered_ratio, 2),
             "filtered_count": filtered_count,
-            "best_avan": round(best_avan, 2),
+            "best_moon": round(best_moon, 2),
             "best_steam": round(best_steam, 2),
             "best_ratio": round(best_ratio, 2),
             "best_count": best_count,
-            "worst_avan": round(worst_avan, 2),
+            "worst_moon": round(worst_moon, 2),
             "worst_steam": round(worst_steam, 2),
             "worst_ratio": round(worst_ratio, 2),
             "worst_count": worst_count,
@@ -201,11 +201,11 @@ def index():
 def analyze_route():
     data = request.get_json()
     inv_html = data.get("inv_html", "")
-    avan_text = data.get("avan_text", "")
+    moon_text = data.get("moon_text", "")
     min_percent = float(data.get("min_percent") or 0)
     steam_id = data.get("steam_id", STEAM_ID)
     try:
-        result = run_analysis(inv_html, avan_text, min_percent, steam_id)
+        result = run_analysis(inv_html, moon_text, min_percent, steam_id)
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
