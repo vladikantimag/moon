@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avan Skin Analyzer</title>
+    <title>Moon Skin Analyzer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -411,7 +411,7 @@
     <!-- Header -->
     <div class="app-header">
         <div class="logo">
-            <div class="logo-name">Avan Analyzer</div>
+            <div class="logo-name">Moon Analyzer</div>
             <div class="logo-sub">Rust · Skin · Intelligence</div>
         </div>
         <div class="hdr-badge">Rust 252490</div>
@@ -425,8 +425,8 @@
                 <textarea id="invHtml" class="form-control" rows="9" placeholder="Paste page HTML with SIH price badges…"></textarea>
             </div>
             <div class="col-md-5">
-                <label class="field-label">Avan Items</label>
-                <textarea id="avanText" class="form-control" rows="9" placeholder="Paste item list from avan.market…"></textarea>
+                <label class="field-label">Moon Items</label>
+                <textarea id="avanText" class="form-control" rows="9" placeholder="Paste item list from moon.market…"></textarea>
             </div>
             <div class="col-md-2 d-flex flex-column gap-3">
                 <div>
@@ -484,7 +484,7 @@
         <span class="bundle-label">Bundle</span>
         <div class="bdiv"></div>
         <div class="bstat">
-            <div class="bstat-lbl">Avan</div>
+            <div class="bstat-lbl">Moon</div>
             <div class="bstat-val" style="color:var(--green)">$<span id="bundle-avan">0.00</span></div>
         </div>
         <div class="bstat">
@@ -598,7 +598,7 @@ function buildSellTable(items, tots, tid) {
             <th style="width:40px">#</th>
             <th class="sortable" data-col="name" onclick="sortTable('${tid}','name','str')">Item <span class="sort-icon">↕</span></th>
             <th class="sortable text-center" style="width:60px" data-col="count" onclick="sortTable('${tid}','count','num')">Qty <span class="sort-icon">↕</span></th>
-            <th class="sortable text-end" style="width:100px" data-col="avan_unit" onclick="sortTable('${tid}','avan_unit','num')">Avan <span class="sort-icon">↕</span></th>
+            <th class="sortable text-end" style="width:100px" data-col="avan_unit" onclick="sortTable('${tid}','avan_unit','num')">Moon <span class="sort-icon">↕</span></th>
             <th class="sortable text-end" style="width:100px" data-col="steam_unit" onclick="sortTable('${tid}','steam_unit','num')">Steam <span class="sort-icon">↕</span></th>
             <th class="sortable text-end pe-3" style="width:100px" data-col="ratio" onclick="sortTable('${tid}','ratio','num')">Rate <span class="sort-icon">↕</span></th>
         </tr></thead>
@@ -676,7 +676,7 @@ function renderResults(data, minPercent) {
         </div>
         <div class="stat-card s-green">
             <div class="stat-value">$${t.can_sell_avan}</div>
-            <div class="stat-label">Avan Payout</div>
+            <div class="stat-label">Moon Payout</div>
             <div class="stat-sub">${t.can_sell_count} items · after fees</div>
         </div>
         <div class="stat-card s-blue">

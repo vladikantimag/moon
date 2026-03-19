@@ -10,8 +10,8 @@ app = Flask(__name__)
 STEAM_ID = "76561199482415281"
 APP_ID = 252490
 CONTEXT_ID = 2
-AVAN_FEE_PERCENT = 0.003
-AVAN_FEE_FIXED = 0.5
+MOON_FEE_PERCENT = 0.04
+MOON_FEE_FIXED = 1.0
 
 _inventory_cache: dict = {}
 _inventory_cache_time: dict = {}
@@ -59,25 +59,25 @@ def load_steam_prices_from_html(html: str) -> List[float]:
     return [float(m.group(1)) for m in pattern.finditer(html)]
 
 
-def load_avan_prices(text: str) -> Dict[str, float]:
+def load_moon_prices(text: str) -> Dict[str, float]:
     lines = [line.strip() for line in text.splitlines() if line.strip()]
-    avan_prices: Dict[str, float] = {}
+    moon_prices: Dict[str, float] = {}
     i = 0
-    while i + 1 < len(lines):
-        name = lines[i]
-        price_line = lines[i + 1]
-        m = re.search(r"([0-9]+(?:\.[0-9]+)?)\s*\$", price_line)
-        if not m:
-            i += 1
-            continue
-        price = float(m.group(1))
-        key = normalize_name(name)
-        if key not in avan_prices or price > avan_prices[key]:
-            avan_prices[key] = price
+    while i < len(lines):
+        if lines[i] == "$" and i + 2 < len(lines):
+            try:
+                price = float(lines[i + 1].replace(",", "."))
+                name = lines[i + 2]
+                if not re.match(r"^[\d.,]+$", name) and name != "$":
+                    key = normalize_name(name)
+                    if key not in moon_prices or price > moon_prices[key]:
+                        moon_prices[key] = price
+                    i += 3
+                    continue
+            except ValueError:
+                pass
         i += 1
-        if i < len(lines) and lines[i].lower() == "product":
-            i += 1
-    return avan_prices
+    return moon_prices
 
 
 def run_analysis(inv_html: str, avan_text: str, min_percent: float, steam_id: str) -> dict:
@@ -87,7 +87,7 @@ def run_analysis(inv_html: str, avan_text: str, min_percent: float, steam_id: st
     inv_items = inv_items[:n]
     steam_prices = steam_prices[:n]
 
-    avan_prices = load_avan_prices(avan_text)
+    avan_prices = load_moon_prices(avan_text)
 
     can_sell_grouped: Dict[str, dict] = {}
     cant_sell_grouped: Dict[str, dict] = {}
@@ -136,7 +136,7 @@ def run_analysis(inv_html: str, avan_text: str, min_percent: float, steam_id: st
     cant_sell_list.sort(key=lambda x: x["steam_total"], reverse=True)
 
     total_avan_gross = sum(e["avan_unit"] * e["count"] for e in can_sell_list)
-    total_avan_net = max(0.0, total_avan_gross * (1 - AVAN_FEE_PERCENT) - AVAN_FEE_FIXED)
+    total_avan_net = max(0.0, total_avan_gross * (1 - MOON_FEE_PERCENT) - MOON_FEE_FIXED)
     total_steam_can = sum(e["steam_unit"] * e["count"] for e in can_sell_list)
     can_sell_count = sum(e["count"] for e in can_sell_list)
     cant_sell_count = sum(e["count"] for e in cant_sell_list)
